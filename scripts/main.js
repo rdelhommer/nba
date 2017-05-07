@@ -6,7 +6,9 @@
 
   var ids = [];
   var seasons = [];
-  var data = {};
+  var data = {
+    abbreviationToIdMap: {}
+  };
 
   setup().then(function () {
     async.eachSeries(ids, function (id, nextId) {
@@ -18,10 +20,10 @@
 
         var gameLogParams = {
           TeamID: id,
-          SeasonYear: s
+          Season: s
         };
+
         var gameLogHeaders = [
-          'TEAM_ID',
           'TEAM_ABBREVIATION',
           'GAME_DATE',
           'MATCHUP',
@@ -30,7 +32,20 @@
 
         api.getGameLogs(gameLogParams, gameLogHeaders)
           .then(function (gameLogs) {
+            if (!gameLogs) {
+              console.log('\t\tNo game log data for this season.');
+              return nextSeason();
+            }
+
             console.log('\t\tGot ' + gameLogs.length + ' game logs!');
+            if (!data.abbreviationToIdMap[gameLogs[0].teamAbbreviation]) {
+              data.abbreviationToIdMap[gameLogs[0].teamAbbreviation] = id;
+            }
+
+            gameLogs.forEach(function (l) {
+              delete l.teamAbbreviation;
+            });
+
             data[id][s].games = gameLogs;
 
             var teamStatParams = {
@@ -45,6 +60,11 @@
 
             api.getTeamStats(teamStatParams, teamStatHeaders)
               .then(function (stats) {
+                if (!stats) {
+                  console.log('\t\tNo stats data for this season.');
+                  return nextSeason();
+                }
+
                 console.log(
                   '\t\tGot pace (' + stats[0].pace +
                   ') and net rating (' + stats[0].netRating + ')!');
@@ -64,8 +84,6 @@
       if (asyncIdErr) {
         console.error(asyncIdErr);
       }
-
-      console.log(data[ids[0]][seasons[0]]);
 
       fs.writeFile('data.json', JSON.stringify(data, null, '\t'), function(err) {
         if(err) {
