@@ -42,7 +42,7 @@
       'MeasureType':'Base',
       'PerMode':'Totals',
       'LeagueID':'00',
-      'SeasonYear':'2016-17',
+      'Season':'2016-17',
       'SeasonType':'Regular Season',
       'PORound':0,
       'TeamID':null,
