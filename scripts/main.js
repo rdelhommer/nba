@@ -4,6 +4,12 @@
 
   var api = require('../src/api');
 
+  var outputFileIndex = process.argv.indexOf('-o') + 1;
+  var outputFile = null;
+  if (outputFileIndex !== 0) {
+    outputFile = process.argv[0];
+  }
+
   var ids = [];
   var seasons = [];
   var data = {
