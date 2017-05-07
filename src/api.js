@@ -1,5 +1,5 @@
 (function () {
-  var REQUEST_DELAY = 1000;
+  var REQUEST_DELAY = 5000;
 
   var request = require('request');
 
@@ -22,6 +22,8 @@
       var url = urlUtil.buildUrl(urlObj, params);
       sendRequest(url)
         .then(function (response) {
+          if (response.resultSets[0].rowSet.length === 0) return resolve(null);
+
           var ret = responseUtil.cleanResponse(response, headersToKeep);
           return resolve(ret);
         })
