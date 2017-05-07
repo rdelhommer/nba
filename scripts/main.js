@@ -7,7 +7,15 @@
   var outputFileIndex = process.argv.indexOf('-o') + 1;
   var outputFile = null;
   if (outputFileIndex !== 0) {
-    outputFile = process.argv[0];
+    outputFile = process.argv[outputFileIndex];
+    console.log('Output File: ' + outputFile);
+  }
+
+  var numSeasonsIndex = process.argv.indexOf('-s') + 1;
+  var numSeasons = 20;
+  if (numSeasonsIndex !== 0) {
+    numSeasons = process.argv[numSeasonsIndex];
+    console.log('Number of Seasons to Collect: ' + numSeasons);
   }
 
   var ids = [];
@@ -126,7 +134,7 @@
       var ret = [];
 
       var currentYear = new Date(Date.now()).getFullYear();
-      for (var i = 0; i < 20; i++) {
+      for (var i = 0; i < numSeasons; i++) {
         var key = (currentYear - 1).toString() + '-' + currentYear.toString().substring(2);
         ret.push(key);
         currentYear--;
