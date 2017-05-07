@@ -8,71 +8,88 @@
   var seasons = [];
   var data = {};
 
-  setup()
-    .then(function () {
-      async.eachSeries(ids, function (id, nextId) {
-        console.log('Team: ' + id);
-        data[id] = {};
-        async.eachSeries(seasons, function (s, nextSeason) {
-          console.log('\tSeason: ' + s);
-          data[id][s] = {};
+  setup().then(function () {
+    async.eachSeries(ids, function (id, nextId) {
+      console.log('Team: ' + id);
+      data[id] = {};
+      async.eachSeries(seasons, function (s, nextSeason) {
+        console.log('\tSeason: ' + s);
+        data[id][s] = {};
 
-          var gameLogParams = {
-            TeamID: id,
-            SeasonYear: s
-          };
+        var gameLogParams = {
+          TeamID: id,
+          SeasonYear: s
+        };
+        var gameLogHeaders = [
+          'TEAM_ID',
+          'TEAM_ABBREVIATION',
+          'GAME_DATE',
+          'MATCHUP',
+          'WL'
+        ];
 
-          api.getGameLogs(gameLogParams)
-            .then(function (gameLogs) {
-              console.log('\t\tGot game logs!');
-              data[id][s].games = gameLogs;
+        api.getGameLogs(gameLogParams, gameLogHeaders)
+          .then(function (gameLogs) {
+            console.log('\t\tGot ' + gameLogs.length + ' game logs!');
+            data[id][s].games = gameLogs;
 
-              var paceParams = {
-                TeamID: id,
-                Season: s
-              };
+            var teamStatParams = {
+              TeamID: id,
+              Season: s
+            };
 
-              api.getTeamStat('PACE', paceParams)
-                .then(function (pace) {
-                  console.log('\t\tGot pace! ' + pace);
-                  data[id][s].pace = pace;
+            var teamStatHeaders = [
+              'PACE',
+              'NET_RATING'
+            ];
 
-                  return nextSeason();
-                })
-                .catch(nextSeason);
-            })
-            .catch(nextSeason);
-        }, function (asyncSeasonErr) {
-          return nextId(asyncSeasonErr);
-        });
-      }, function (asyncIdErr) {
-        if (asyncIdErr) {
-          console.error(asyncIdErr);
+            api.getTeamStats(teamStatParams, teamStatHeaders)
+              .then(function (stats) {
+                console.log(
+                  '\t\tGot pace (' + stats[0].pace +
+                  ') and net rating (' + stats[0].netRating + ')!');
+
+                data[id][s].pace = stats[0].pace;
+                data[id][s].netRating = stats[0].netRating;
+
+                return nextSeason();
+              })
+              .catch(nextSeason);
+          })
+          .catch(nextSeason);
+      }, function (asyncSeasonErr) {
+        return nextId(asyncSeasonErr);
+      });
+    }, function (asyncIdErr) {
+      if (asyncIdErr) {
+        console.error(asyncIdErr);
+      }
+
+      console.log(data[ids[0]][seasons[0]]);
+
+      fs.writeFile('data.json', JSON.stringify(data, null, '\t'), function(err) {
+        if(err) {
+          console.error('Error occurred when writing data to file!');
+          return console.error(err);
         }
 
-        console.log(data[ids[0]][seasons[0]]);
-
-        fs.writeFile("data.json", JSON.stringify(data, null, '\t'), function(err) {
-          if(err) {
-            console.error('Error occurred when writing data to file!');
-            return console.error(err);
-          }
-
-          console.log("data.json was saved!");
-        });
+        console.log('data.json was saved!');
       });
-    })
-    .catch(console.error);
+    });
+  }).catch(console.error);
 
   function setup() {
     return new Promise(function(resolve, reject) {
       console.log('Start setup');
-      api.getTeamStat('TEAM_ID')
-        .then(function (teamIds) {
+      api.getTeamStats(null, ['TEAM_ID'])
+        .then(function (statsObj) {
+          ids = statsObj.map(function (s) { return s.teamId; });
           console.log('Got Team Ids');
-          console.log(teamIds);
-          ids = teamIds;
+          console.log(ids);
+
           seasons = buildSeasonsArray();
+          console.log('Got Seasons');
+          console.log(seasons);
 
           return resolve();
         })
@@ -89,10 +106,11 @@
         currentYear--;
       }
 
-      console.log('Got Seasons');
-      console.log(ret);
-
       return ret;
     }
+  }
+
+  function cleanGameLogs(gameLogs, headersToKeep) {
+    // TODO
   }
 }());
