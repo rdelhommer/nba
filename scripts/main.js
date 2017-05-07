@@ -91,7 +91,9 @@
         console.error(asyncIdErr);
       }
 
-      fs.writeFile('data.json', JSON.stringify(data, null, '\t'), function(err) {
+      if (!outputFile) return;
+
+      fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
         if(err) {
           console.error('Error occurred when writing data to file!');
           return console.error(err);
