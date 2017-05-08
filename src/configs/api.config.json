@@ -12,7 +12,7 @@
       "Referer": "http://stats.nba.com/scores/",
       "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36",
       "x-nba-stats-origin": "stats",
-      "x-nba-stats-token": true,
+      "x-nba-stats-token": true
     }
   }
 }
