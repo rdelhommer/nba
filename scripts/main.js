@@ -32,65 +32,85 @@
         console.log('\tSeason: ' + s);
         data[id][s] = {};
 
-        var gameLogParams = {
-          TeamID: id,
-          Season: s
-        };
-
-        var gameLogHeaders = [
-          'TEAM_ABBREVIATION',
-          'GAME_DATE',
-          'MATCHUP',
-          'WL'
+        var seasonTypes = [
+          'Regular Season',
+          'Playoffs'
         ];
 
-        api.getGameLogs(gameLogParams, gameLogHeaders)
-          .then(function (gameLogs) {
-            if (!gameLogs) {
-              console.log('\t\tNo game log data for this season.');
-              return nextSeason();
-            }
+        async.eachSeries(seasonTypes, function (type, nextSeasonType) {
+          console.log('\t\t' + type);
+          var typeKey = type.charAt(0).toLowerCase() + type.replace(' ','').substring(1);
+          data[id][s][typeKey] = {};
 
-            console.log('\t\tGot ' + gameLogs.length + ' game logs!');
-            if (!data.abbreviationToIdMap[gameLogs[0].teamAbbreviation]) {
-              data.abbreviationToIdMap[gameLogs[0].teamAbbreviation] = id;
-            }
+          var gameLogParams = {
+            TeamID: id,
+            Season: s,
+            SeasonType: type
+          };
 
-            gameLogs.forEach(function (l) {
-              delete l.teamAbbreviation;
-            });
+          var gameLogHeaders = [
+            'TEAM_ABBREVIATION',
+            'GAME_DATE',
+            'MATCHUP',
+            'WL',
+            'PTS',
+            'FGA',
+            'FTA',
+            'OREB',
+            'TOV'
+          ];
 
-            data[id][s].games = gameLogs;
+          api.getGameLogs(gameLogParams, gameLogHeaders)
+            .then(function (gameLogs) {
+              if (!gameLogs) {
+                console.log('\t\t\tNo game log data for ' + type);
+                return nextSeasonType();
+              }
 
-            var teamStatParams = {
-              TeamID: id,
-              Season: s
-            };
+              console.log('\t\t\tGot ' + gameLogs.length + ' game logs!');
+              if (!data.abbreviationToIdMap[gameLogs[0].teamAbbreviation]) {
+                data.abbreviationToIdMap[gameLogs[0].teamAbbreviation] = id;
+              }
 
-            var teamStatHeaders = [
-              'PACE',
-              'NET_RATING'
-            ];
+              gameLogs.forEach(function (l) {
+                delete l.teamAbbreviation;
+              });
 
-            api.getTeamStats(teamStatParams, teamStatHeaders)
-              .then(function (stats) {
-                if (!stats) {
-                  console.log('\t\tNo stats data for this season.');
-                  return nextSeason();
-                }
+              data[id][s][typeKey].games = gameLogs;
 
-                console.log(
-                  '\t\tGot pace (' + stats[0].pace +
-                  ') and net rating (' + stats[0].netRating + ')!');
+              var teamStatParams = {
+                TeamID: id,
+                Season: s,
+                SeasonType: type
+              };
 
-                data[id][s].pace = stats[0].pace;
-                data[id][s].netRating = stats[0].netRating;
+              var teamStatHeaders = [
+                'PACE',
+                'NET_RATING'
+              ];
 
-                return nextSeason();
-              })
-              .catch(nextSeason);
-          })
-          .catch(nextSeason);
+              api.getTeamStats(teamStatParams, teamStatHeaders)
+                .then(function (stats) {
+                  if (!stats) {
+                    console.log('\t\t\tNo stats data for ' + type);
+                    return nextSeasonType();
+                  }
+
+                  console.log(
+                    '\t\t\tGot pace (' + stats[0].pace +
+                    ') and net rating (' + stats[0].netRating + ')!');
+
+                  data[id][s][typeKey].pace = stats[0].pace;
+                  data[id][s][typeKey].netRating = stats[0].netRating;
+
+                  return nextSeasonType();
+                })
+                .catch(nextSeasonType);
+            })
+            .catch(nextSeasonType);
+        }, function (asyncSeasonTypeErr) {
+          return nextSeason(asyncSeasonTypeErr);
+        });
       }, function (asyncSeasonErr) {
         return nextId(asyncSeasonErr);
       });
