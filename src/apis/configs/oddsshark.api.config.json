@@ -1,0 +1,22 @@
+{
+  "general": {
+    "delay": 1000,
+    "timeout": 5000,
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Encoding": "gzip, deflate, sdch",
+      "Accept-Language": "en-US,en;q=0.8",
+      "Connection": "keep-alive",
+      "DNT": 1,
+      "Host": "io.oddsshark.com",
+      "Origin": "http://www.oddsshark.com",
+      "Referer": "http://www.oddsshark.com/scores/nba/2017-05-06",
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36"
+    }
+  },
+  "requests": {
+    "nbaScores": {
+      "url": "http://io.oddsshark.com/scores/nba"
+    }
+  }
+}
