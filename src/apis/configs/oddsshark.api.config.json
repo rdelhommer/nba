@@ -1,6 +1,6 @@
 {
   "general": {
-    "delay": 1000,
+    "delay": 5000,
     "timeout": 5000,
     "headers": {
       "Accept": "application/json, text/plain, */*",
