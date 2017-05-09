@@ -6,16 +6,26 @@
   var oddssharkApi = require('../src/apis/oddsshark.api');
 
   var outputFileIndex = process.argv.indexOf('-o') + 1;
-  var outputFile = null;
+  var outputFolder = null;
   if (outputFileIndex !== 0) {
-    outputFile = process.argv[outputFileIndex];
-    console.log('Output File: ' + outputFile);
+    outputFolder = process.argv[outputFileIndex];
+    if (!fs.existsSync(outputFolder)){
+      fs.mkdirSync(outputFolder);
+    }
+    console.log('Output Folder: ' + outputFolder);
   }
 
   var numSeasonsIndex = process.argv.indexOf('-s') + 1;
   var numSeasons = 20;
   if (numSeasonsIndex !== 0) {
     numSeasons = process.argv[numSeasonsIndex];
+    console.log('Number of Seasons to Collect: ' + numSeasons);
+  }
+
+  var startYearIndex = process.argv.indexOf('-y') + 1;
+  var startYear = new Date(Date.now()).getFullYear();
+  if (startYearIndex !== 0) {
+    startYear = process.argv[startYearIndex];
     console.log('Number of Seasons to Collect: ' + numSeasons);
   }
 
@@ -53,21 +63,24 @@
           return nextDate();
         }).catch(nextDate);
       }, function (dateErr) {
-        return nextSeason(dateErr);
+        if (dateErr) return nextSeason(dateErr);
+        if (!outputFolder) return nextSeason(dateErr);
+
+        var outputFile = outputFolder + '/oddsshark_nba_' + s + '.json';
+        fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
+          if(err) {
+            console.error('Error occurred when writing data to file!');
+            return console.error(err);
+          }
+
+          console.log(outputFile + ' was saved!');
+          data = [];
+          return nextSeason(dateErr);
+        });
+
       });
     }, function (seasonErr) {
       if (seasonErr) console.error(seasonErr);
-
-      if (!outputFile) return;
-
-      fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
-        if(err) {
-          console.error('Error occurred when writing data to file!');
-          return console.error(err);
-        }
-
-        console.log(outputFile + ' was saved!');
-      });
     });
   }).catch(console.error);
 
@@ -126,11 +139,10 @@
     function buildSeasonsArray() {
       var ret = [];
 
-      var currentYear = new Date(Date.now()).getFullYear();
       for (var i = 0; i < numSeasons; i++) {
-        var key = (currentYear - 1).toString() + '-' + currentYear.toString().substring(2);
+        var key = (startYear - 1).toString() + '-' + startYear.toString().substring(2);
         ret.push(key);
-        currentYear--;
+        startYear--;
       }
 
       return ret;
