@@ -2,7 +2,7 @@
   var async = require('async');
   var fs = require('fs');
 
-  var api = require('../src/api');
+  var nbaApi = require('../src/apis/nba.api');
 
   var outputFileIndex = process.argv.indexOf('-o') + 1;
   var outputFile = null;
@@ -60,7 +60,7 @@
             'TOV'
           ];
 
-          api.getGameLogs(gameLogParams, gameLogHeaders)
+          nbaApi.getGameLogs(gameLogParams, gameLogHeaders)
             .then(function (gameLogs) {
               if (!gameLogs) {
                 console.log('\t\t\tNo game log data for ' + type);
@@ -89,7 +89,7 @@
                 'NET_RATING'
               ];
 
-              api.getTeamStats(teamStatParams, teamStatHeaders)
+              nbaApi.getTeamStats(teamStatParams, teamStatHeaders)
                 .then(function (stats) {
                   if (!stats) {
                     console.log('\t\t\tNo stats data for ' + type);
@@ -135,7 +135,7 @@
   function setup() {
     return new Promise(function(resolve, reject) {
       console.log('Start setup');
-      api.getTeamStats(null, ['TEAM_ID'])
+      nbaApi.getTeamStats(null, ['TEAM_ID'])
         .then(function (statsObj) {
           ids = statsObj.map(function (s) { return s.teamId; });
           console.log('Got Team Ids');

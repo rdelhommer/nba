@@ -1,0 +1,80 @@
+{
+  "general": {
+    "delay": 3000,
+    "timeout": 5000,
+    "headers": {
+      "Accept": "application/json, text/plain, */*",
+      "Accept-Encoding": "gzip, deflate, sdch",
+      "Accept-Language": "en-US,en;q=0.8",
+      "Connection": "keep-alive",
+      "DNT": 1,
+      "Host": "stats.nba.com",
+      "Referer": "http://stats.nba.com/scores/",
+      "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36",
+      "x-nba-stats-origin": "stats",
+      "x-nba-stats-token": true
+    }
+  },
+  "requests": {
+    "leagueDashTeamStats": {
+      "url": "http://stats.nba.com/stats/leaguedashteamstats",
+      "defaultParams": {
+        "MeasureType": "Advanced",
+        "PerMode": "PerGame",
+        "PlusMinus": "N",
+        "PaceAdjust": "N",
+        "Rank": "N",
+        "LeagueID": "00",
+        "Season": "2016-17",
+        "SeasonType": "Regular Season",
+        "PORound": 0,
+        "Outcome": null,
+        "Location": null,
+        "Month": 0,
+        "SeasonSegment": null,
+        "DateFrom": null,
+        "DateTo": null,
+        "OpponentTeamID": 0,
+        "VsConference": null,
+        "VsDivision": null,
+        "TeamID": 0,
+        "Conference": null,
+        "Division": null,
+        "GameSegment": null,
+        "Period": 0,
+        "ShotClockRange": null,
+        "LastNGames": 0,
+        "GameScope": null,
+        "PlayerExperience": null,
+        "PlayerPosition": null,
+        "StarterBench": null
+      }
+    },
+    "teamGameLogs": {
+      "url": "http://stats.nba.com/stats/teamgamelogs",
+      "defaultParams": {
+        "MeasureType":"Base",
+        "PerMode":"Totals",
+        "LeagueID":"00",
+        "Season":"2016-17",
+        "SeasonType":"Regular Season",
+        "PORound":0,
+        "TeamID":null,
+        "PlayerID":null,
+        "Outcome":null,
+        "Location":null,
+        "Month":0,
+        "SeasonSegment":null,
+        "DateFrom":null,
+        "DateTo":null,
+        "OppTeamID":0,
+        "VsConference":null,
+        "VsDivision":null,
+        "GameSegment":null,
+        "Period":0,
+        "ShotClockRange":null,
+        "LastNGames":0
+      }
+    }
+  }
+}
