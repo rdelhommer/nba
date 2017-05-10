@@ -26,7 +26,7 @@
   var startYear = new Date(Date.now()).getFullYear();
   if (startYearIndex !== 0) {
     startYear = process.argv[startYearIndex];
-    console.log('Number of Seasons to Collect: ' + numSeasons);
+    console.log('Start year: ' + startYear);
   }
 
   var seasons = [];

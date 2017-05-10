@@ -4,11 +4,14 @@
 
   var nbaApi = require('../src/apis/nba.api');
 
-  var outputFileIndex = process.argv.indexOf('-o') + 1;
-  var outputFile = null;
-  if (outputFileIndex !== 0) {
-    outputFile = process.argv[outputFileIndex];
-    console.log('Output File: ' + outputFile);
+  var outputFolderIndex = process.argv.indexOf('-o') + 1;
+  var outputFolder = null;
+  if (outputFolderIndex !== 0) {
+    outputFolder = process.argv[outputFolderIndex];
+    if (!fs.existsSync(outputFolder)){
+      fs.mkdirSync(outputFolder);
+    }
+    console.log('Output Folder: ' + outputFolder);
   }
 
   var numSeasonsIndex = process.argv.indexOf('-s') + 1;
@@ -18,19 +21,28 @@
     console.log('Number of Seasons to Collect: ' + numSeasons);
   }
 
+  var startYearIndex = process.argv.indexOf('-y') + 1;
+  var startYear = new Date(Date.now()).getFullYear();
+  if (startYearIndex !== 0) {
+    startYear = process.argv[startYearIndex];
+    console.log('Start year: ' + startYear);
+  }
+
   var ids = [];
   var seasons = [];
   var data = {
     abbreviationToIdMap: {}
   };
+  var numRequestsSent = 0;
 
   setup().then(function () {
-    async.eachSeries(ids, function (id, nextId) {
-      console.log('Team: ' + id);
-      data[id] = {};
-      async.eachSeries(seasons, function (s, nextSeason) {
-        console.log('\tSeason: ' + s);
-        data[id][s] = {};
+    async.eachSeries(seasons, function (s, nextSeason) {
+      console.log('Season: ' + s);
+      data.season = s;
+
+      async.eachSeries(ids, function (id, nextId) {
+        console.log('\tTeam: ' + id);
+        data[id] = {};
 
         var seasonTypes = [
           'Regular Season',
@@ -40,7 +52,7 @@
         async.eachSeries(seasonTypes, function (type, nextSeasonType) {
           console.log('\t\t' + type);
           var typeKey = type.charAt(0).toLowerCase() + type.replace(' ','').substring(1);
-          data[id][s][typeKey] = {};
+          data[id][typeKey] = {};
 
           var gameLogParams = {
             TeamID: id,
@@ -53,15 +65,27 @@
             'GAME_DATE',
             'MATCHUP',
             'WL',
-            'PTS',
+            'FGM',
             'FGA',
+            'FG3M',
+            'FG3A',
+            'FTM',
             'FTA',
+            'PTS',
             'OREB',
+            'DREB',
+            'AST',
+            'STL',
+            'BLK',
+            'BLKA',
+            'PF',
+            'PFD',
             'TOV'
           ];
 
           nbaApi.getGameLogs(gameLogParams, gameLogHeaders)
             .then(function (gameLogs) {
+              numRequestsSent++;
               if (!gameLogs) {
                 console.log('\t\t\tNo game log data for ' + type);
                 return nextSeasonType();
@@ -76,7 +100,7 @@
                 delete l.teamAbbreviation;
               });
 
-              data[id][s][typeKey].games = gameLogs;
+              data[id][typeKey].games = gameLogs;
 
               var teamStatParams = {
                 TeamID: id,
@@ -85,12 +109,26 @@
               };
 
               var teamStatHeaders = [
+                'W',
+                'L',
+                'OFF_RATING',
+                'DEF_RATING',
+                'NET_RATING',
+                'AST_PCT',
+                'AST_TO',
+                'AST_RATIO',
+                'OREB_PCT',
+                'DREB_PCT',
+                'REB_PCT',
+                'TM_TOV_PCT',
+                'EFG_PCT',
+                'TS_PCT',
                 'PACE',
-                'NET_RATING'
               ];
 
               nbaApi.getTeamStats(teamStatParams, teamStatHeaders)
                 .then(function (stats) {
+                  numRequestsSent++;
                   if (!stats) {
                     console.log('\t\t\tNo stats data for ' + type);
                     return nextSeasonType();
@@ -100,35 +138,41 @@
                     '\t\t\tGot pace (' + stats[0].pace +
                     ') and net rating (' + stats[0].netRating + ')!');
 
-                  data[id][s][typeKey].pace = stats[0].pace;
-                  data[id][s][typeKey].netRating = stats[0].netRating;
+                  data[id][typeKey].pace = stats[0].pace;
+                  data[id][typeKey].netRating = stats[0].netRating;
 
                   return nextSeasonType();
                 })
                 .catch(nextSeasonType);
             })
             .catch(nextSeasonType);
-        }, function (asyncSeasonTypeErr) {
-          return nextSeason(asyncSeasonTypeErr);
+        }, function (seasonTypeErr) {
+          return nextId(seasonTypeErr);
         });
-      }, function (asyncSeasonErr) {
-        return nextId(asyncSeasonErr);
+      }, function (idErr) {
+        if (idErr) return nextSeason(idErr);
+        if (!outputFolder) return nextSeason(idErr);
+
+        var outputFile = outputFolder + '/nba_games_and_adv_team_stats' + s + '.json';
+        fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
+          if(err) {
+            console.error('Error occurred when writing data to file!');
+            return console.error(err);
+          }
+
+          console.log(outputFile + ' was saved!');
+          data = {
+            abbreviationToIdMap: {}
+          };
+
+          return nextSeason(idErr);
+        });
       });
-    }, function (asyncIdErr) {
-      if (asyncIdErr) {
-        console.error(asyncIdErr);
+    }, function (seasonErr) {
+      console.log('Number of requests sent: ' + numRequestsSent);
+      if (seasonErr) {
+        console.error(seasonErr);
       }
-
-      if (!outputFile) return;
-
-      fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
-        if(err) {
-          console.error('Error occurred when writing data to file!');
-          return console.error(err);
-        }
-
-        console.log('data.json was saved!');
-      });
     });
   }).catch(console.error);
 
@@ -137,6 +181,7 @@
       console.log('Start setup');
       nbaApi.getTeamStats(null, ['TEAM_ID'])
         .then(function (statsObj) {
+          numRequestsSent++;
           ids = statsObj.map(function (s) { return s.teamId; });
           console.log('Got Team Ids');
           console.log(ids);
@@ -153,18 +198,13 @@
     function buildSeasonsArray() {
       var ret = [];
 
-      var currentYear = new Date(Date.now()).getFullYear();
       for (var i = 0; i < numSeasons; i++) {
-        var key = (currentYear - 1).toString() + '-' + currentYear.toString().substring(2);
+        var key = (startYear - 1).toString() + '-' + startYear.toString().substring(2);
         ret.push(key);
-        currentYear--;
+        startYear--;
       }
 
       return ret;
     }
-  }
-
-  function cleanGameLogs(gameLogs, headersToKeep) {
-    // TODO
   }
 }());
