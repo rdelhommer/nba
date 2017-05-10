@@ -75,6 +75,17 @@
         "ShotClockRange":null,
         "LastNGames":0
       }
+    },
+    "playByPlay": {
+      "url": "http://stats.nba.com/stats/playbyplayv2",
+      "defaultParams": {
+        "GameID": null,
+        "StartPeriod": 0,
+        "EndPeriod": 0
+      },
+      "userParams": [
+        "GameID"
+      ]
     }
   }
 }

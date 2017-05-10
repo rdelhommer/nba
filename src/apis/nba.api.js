@@ -6,6 +6,7 @@
 
   exports.getTeamStats = getTeamStats;
   exports.getGameLogs = getGameLogs;
+  exports.getPlayByPlay = getPlayByPlay;
 
   function getTeamStats(params, headersToKeep) {
     return sendRequestGetResponse(
@@ -17,8 +18,21 @@
       apiCfg.requests.teamGameLogs, params, headersToKeep);
   }
 
+  function getPlayByPlay(params, headersToKeep) {
+    return sendRequestGetResponse(
+      apiCfg.requests.playByPlay, params, headersToKeep);
+  }
+
   function sendRequestGetResponse(urlCfg, params, headersToKeep) {
     return new Promise(function(resolve, reject) {
+      if (urlCfg.userParams) {
+        urlCfg.userParams.forEach(function (p) {
+          if (params[p]) return;
+
+          return reject(new Error('Param ' + p + ' must be provided by the user.'));
+        });
+      }
+
       return setTimeout(function () {
         var url = urlUtil.buildUrl(urlCfg, params);
         requestUtil.sendRequest(
