@@ -54,96 +54,43 @@
           var typeKey = type.charAt(0).toLowerCase() + type.replace(' ','').substring(1);
           data[id][typeKey] = {};
 
-          var gameLogParams = {
+          var teamStatParams = {
             TeamID: id,
             Season: s,
-            SeasonType: type
+            SeasonType: type,
+            MeasureType: 'Advanced'
           };
 
-          var gameLogHeaders = [
-            'TEAM_ABBREVIATION',
-            'GAME_DATE',
-            'MATCHUP',
-            'WL',
-            'FGM',
-            'FGA',
-            'FG3M',
-            'FG3A',
-            'FTM',
-            'FTA',
-            'PTS',
-            'OREB',
-            'DREB',
-            'AST',
-            'STL',
-            'BLK',
-            'BLKA',
-            'PF',
-            'PFD',
-            'TOV'
+          var teamStatHeaders = [
+            'W',
+            'L',
+            'OFF_RATING',
+            'DEF_RATING',
+            'NET_RATING',
+            'AST_PCT',
+            'AST_TO',
+            'AST_RATIO',
+            'OREB_PCT',
+            'DREB_PCT',
+            'REB_PCT',
+            'TM_TOV_PCT',
+            'EFG_PCT',
+            'TS_PCT',
+            'PACE',
           ];
 
-          nbaApi.getGameLogs(gameLogParams, gameLogHeaders)
-            .then(function (gameLogs) {
+          nbaApi.getTeamStats(teamStatParams, teamStatHeaders)
+            .then(function (stats) {
               numRequestsSent++;
-              if (!gameLogs) {
-                console.log('\t\t\tNo game log data for ' + type);
+              if (!stats) {
+                console.log('\t\t\tNo stats data for ' + type);
                 return nextSeasonType();
               }
 
-              console.log('\t\t\tGot ' + gameLogs.length + ' game logs!');
-              if (!data.abbreviationToIdMap[gameLogs[0].teamAbbreviation]) {
-                data.abbreviationToIdMap[gameLogs[0].teamAbbreviation] = id;
-              }
+              console.log('\t\t\tGot advanced stats!');
+              data[id][typeKey] = stats[0];
 
-              gameLogs.forEach(function (l) {
-                delete l.teamAbbreviation;
-              });
-
-              data[id][typeKey].games = gameLogs;
-
-              var teamStatParams = {
-                TeamID: id,
-                Season: s,
-                SeasonType: type
-              };
-
-              var teamStatHeaders = [
-                'W',
-                'L',
-                'OFF_RATING',
-                'DEF_RATING',
-                'NET_RATING',
-                'AST_PCT',
-                'AST_TO',
-                'AST_RATIO',
-                'OREB_PCT',
-                'DREB_PCT',
-                'REB_PCT',
-                'TM_TOV_PCT',
-                'EFG_PCT',
-                'TS_PCT',
-                'PACE',
-              ];
-
-              nbaApi.getTeamStats(teamStatParams, teamStatHeaders)
-                .then(function (stats) {
-                  numRequestsSent++;
-                  if (!stats) {
-                    console.log('\t\t\tNo stats data for ' + type);
-                    return nextSeasonType();
-                  }
-
-                  console.log(
-                    '\t\t\tGot pace (' + stats[0].pace +
-                    ') and net rating (' + stats[0].netRating + ')!');
-
-                  data[id][typeKey].pace = stats[0].pace;
-                  data[id][typeKey].netRating = stats[0].netRating;
-
-                  return nextSeasonType();
-                })
-                .catch(nextSeasonType);
+              return nextSeasonType();
             })
             .catch(nextSeasonType);
         }, function (seasonTypeErr) {
@@ -153,7 +100,7 @@
         if (idErr) return nextSeason(idErr);
         if (!outputFolder) return nextSeason(idErr);
 
-        var outputFile = outputFolder + '/nba_games_and_adv_team_stats' + s + '.json';
+        var outputFile = outputFolder + '/nba_adv_team_stats_' + s + '.json';
         fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
           if(err) {
             console.error('Error occurred when writing data to file!');

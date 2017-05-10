@@ -19,7 +19,7 @@
     "leagueDashTeamStats": {
       "url": "http://stats.nba.com/stats/leaguedashteamstats",
       "defaultParams": {
-        "MeasureType": "Advanced",
+        "MeasureType": "Base",
         "PerMode": "PerGame",
         "PlusMinus": "N",
         "PaceAdjust": "N",
