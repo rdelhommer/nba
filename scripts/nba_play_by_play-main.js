@@ -31,14 +31,19 @@
   var seasons = [];
   var seasonGameIds = {};
   var data = {};
+  var teamIds = [];
   var numRequestsSent = 0;
+  var numIdsFinished = 0;
+  var gamesPerPart = 400;
+  var filePart = 1;
+  var test = null;
 
   setup().then(function () {
     async.eachSeries(seasons, function (s, nextSeason) {
       console.log('Season: ' + s);
 
       async.eachSeries(seasonGameIds[s], function (id, nextId) {
-        console.log('\tGame ID: ' + id);
+        console.log('Game ID: ' + id + ' - ' + (numIdsFinished / seasonGameIds[s].length * 100).toFixed(2) + '%');
 
         var playByPlayParams = {
           GameID: id
@@ -48,33 +53,55 @@
           .then(function (pbp) {
             numRequestsSent++;
             if (!pbp) {
-              console.log('\t\t\tNo play by play data for game ' + id);
+              console.log('No play by play data for game ' + id);
               return nextId();
             }
 
-            console.log('\t\t\tGot ' + pbp.length + ' plays!');
+            console.log('Got ' + pbp.length + ' plays!');
 
             data[id] = pbp;
+            numIdsFinished++;
 
-            return nextId();
+            if (!outputFolder || numIdsFinished%gamesPerPart !== 0) return nextId();
+
+            var outputFile = outputFolder + '/nba_pbp_' + s + '.pt' + filePart + '.json';
+            console.log('Saving to ' + outputFile);
+            fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
+              if(err) {
+                console.error('Error occurred when writing data to file!');
+                return console.error(err);
+              }
+
+              console.log(outputFile + ' was saved!');
+              data = {};
+              filePart++;
+
+              return nextId();
+            });
           })
           .catch(nextId);
       }, function (idErr) {
         if (idErr) return nextSeason(idErr);
         if (!outputFolder) return nextSeason(idErr);
 
-        var outputFile = outputFolder + '/nba_play_by_play_' + s + '.json';
-        fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
-          if(err) {
-            console.error('Error occurred when writing data to file!');
-            return console.error(err);
-          }
+        var outputFile = outputFolder + '/nba_pbp_' + s + '.pt' + filePart + '.json';
+        console.log('Saving to ' + outputFile);
+        try {
+          fs.writeFile(outputFile, JSON.stringify(data, null, '\t'), function(err) {
+            if(err) {
+              console.error('Error occurred when writing data to file!');
+              return console.error(err);
+            }
 
-          console.log(outputFile + ' was saved!');
-          data = {};
+            console.log(outputFile + ' was saved!');
+            data = {};
 
-          return nextSeason(idErr);
-        });
+            return nextSeason(idErr);
+          });
+        } catch (e) {
+          console.log('save error');
+          console.error(e);
+        }
       });
     }, function (seasonErr) {
       console.log('Number of requests sent: ' + numRequestsSent);
@@ -101,7 +128,7 @@
             var tempIds = [];
             seasonGameIds[s] = [];
 
-            console.log('\tGot regular season game ids for ' + s);
+            console.log('Got regular season game ids for ' + s);
             var ids = gameLogs.map(function (l) { return l.gameId; });
             tempIds = tempIds.concat(ids);
 
@@ -113,7 +140,7 @@
             nbaApi.getGameLogs(playoffParams, [ 'GAME_ID' ])
               .then(function (gameLogs) {
                 numRequestsSent++;
-                console.log('\tGot playoff game ids for ' + s);
+                console.log('Got playoff game ids for ' + s);
                 var ids = gameLogs.map(function (l) { return l.gameId; });
                 tempIds = tempIds.concat(ids);
 
@@ -122,7 +149,7 @@
                   seasonGameIds[s].push(id);
                 });
 
-                console.log('\t' + seasonGameIds[s].length + ' games for ' + s);
+                console.log('' + seasonGameIds[s].length + ' games for ' + s);
 
                 return nextSeason();
               })
