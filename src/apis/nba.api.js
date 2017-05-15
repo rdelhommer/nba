@@ -1,4 +1,6 @@
 (function () {
+  var async = require('async');
+
   var urlUtil = require('../utils/url.util');
   var requestUtil = require('../utils/request.util');
   var responseUtil = require('../utils/response.util');
@@ -23,7 +25,7 @@
       apiCfg.requests.playByPlay, params, headersToKeep);
   }
 
-  function sendRequestGetResponse(urlCfg, params, headersToKeep) {
+  function sendRequestGetResponse(urlCfg, params, headersToKeep, tryNumber) {
     return new Promise(function(resolve, reject) {
       if (urlCfg.userParams) {
         urlCfg.userParams.forEach(function (p) {
@@ -33,20 +35,55 @@
         });
       }
 
-      return setTimeout(function () {
-        var url = urlUtil.buildUrl(urlCfg, params);
-        requestUtil.sendRequest(
-          url,
-          apiCfg.general.headers,
-          apiCfg.general.timeout)
-          .then(function (response) {
-            if (response.resultSets[0].rowSet.length === 0) return resolve(null);
+      var url = urlUtil.buildUrl(urlCfg, params);
+      var responseData = null;
+      var generatedErr = null;
+      async.timesSeries(apiCfg.general.requestRetries, function (i, next) {
+        if (responseData) return next();
 
-            var ret = responseUtil.cleanResponse(response, headersToKeep);
-            return resolve(ret);
-          })
-          .catch(reject);
-      }, apiCfg.general.delay);
+        setTimeout(function () {
+          console.log('Send request: Try ' + (i + 1));
+          requestUtil.sendRequest(
+            url,
+            apiCfg.general.headers,
+            apiCfg.general.timeout)
+            .then(function (response) {
+              if (response.resultSets[0].rowSet.length === 0) return resolve(null);
+
+              var ret = responseUtil.cleanResponse(response, headersToKeep);
+              responseData = ret;
+              return next();
+            })
+            .catch(function (err) {
+              console.error(err);
+              generatedErr = err;
+              return next();
+            });
+        }, apiCfg.general.delay);
+      }, function (asyncErr) {
+        if (responseData) return resolve(responseData);
+
+        return reject(generatedErr);
+      });
+
     });
+
+    function sendRequest(url) {
+      return function () {
+        return new Promise(function(resolve, reject) {
+          requestUtil.sendRequest(
+            url,
+            apiCfg.general.headers,
+            apiCfg.general.timeout)
+            .then(function (response) {
+              if (response.resultSets[0].rowSet.length === 0) return resolve(null);
+
+              var ret = responseUtil.cleanResponse(response, headersToKeep);
+              return resolve(ret);
+            })
+            .catch(reject);
+        });
+      };
+    }
   }
 }());

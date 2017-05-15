@@ -1,7 +1,8 @@
 {
   "general": {
-    "delay": 10000,
+    "delay": 1000,
     "timeout": 5000,
+    "requestRetries": 5,
     "headers": {
       "Accept": "application/json, text/plain, */*",
       "Accept-Encoding": "gzip, deflate, sdch",
