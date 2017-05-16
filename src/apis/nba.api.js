@@ -9,6 +9,7 @@
   exports.getTeamStats = getTeamStats;
   exports.getGameLogs = getGameLogs;
   exports.getPlayByPlay = getPlayByPlay;
+  exports.getTracking = getTracking;
 
   function getTeamStats(params, headersToKeep) {
     return sendRequestGetResponse(
@@ -32,8 +33,8 @@
 
   function sendRequestGetResponse(urlCfg, params, headersToKeep, tryNumber) {
     return new Promise(function(resolve, reject) {
-      if (urlCfg.userParams) {
-        urlCfg.userParams.forEach(function (p) {
+      if (urlCfg.requiredUserParams) {
+        urlCfg.requiredUserParams.forEach(function (p) {
           if (params[p]) return;
 
           return reject(new Error('Param ' + p + ' must be provided by the user.'));

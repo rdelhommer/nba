@@ -20,14 +20,14 @@
     "leagueDashTeamStats": {
       "url": "http://stats.nba.com/stats/leaguedashteamstats",
       "defaultParams": {
-        "MeasureType": "Base",
-        "PerMode": "PerGame",
+        "MeasureType": null,
+        "PerMode": null,
         "PlusMinus": "N",
         "PaceAdjust": "N",
         "Rank": "N",
         "LeagueID": "00",
-        "Season": "2016-17",
-        "SeasonType": "Regular Season",
+        "Season": null,
+        "SeasonType": null,
         "PORound": 0,
         "Outcome": null,
         "Location": null,
@@ -49,16 +49,22 @@
         "PlayerExperience": null,
         "PlayerPosition": null,
         "StarterBench": null
-      }
+      },
+      "requiredUserParams": [
+        "MeasureType",
+        "PerMode",
+        "Season",
+        "SeasonType"
+      ]
     },
     "teamGameLogs": {
       "url": "http://stats.nba.com/stats/teamgamelogs",
       "defaultParams": {
-        "MeasureType":"Base",
-        "PerMode":"Totals",
+        "MeasureType":null,
+        "PerMode":null,
         "LeagueID":"00",
-        "Season":"2016-17",
-        "SeasonType":"Regular Season",
+        "Season":null,
+        "SeasonType":null,
         "PORound":0,
         "TeamID":null,
         "PlayerID":null,
@@ -75,7 +81,14 @@
         "Period":0,
         "ShotClockRange":null,
         "LastNGames":0
-      }
+      },
+      "requiredUserParams": [
+        "GameID",
+        "MeasureType",
+        "PerMode",
+        "Season",
+        "SeasonType"
+      ]
     },
     "playByPlay": {
       "url": "http://stats.nba.com/stats/playbyplayv2",
@@ -84,7 +97,7 @@
         "StartPeriod": 0,
         "EndPeriod": 0
       },
-      "userParams": [
+      "requiredUserParams": [
         "GameID"
       ]
     },
@@ -92,7 +105,7 @@
       "url": "http://stats.nba.com/stats/leaguedashptstats",
       "defaultParams": {
         "PtMeasureType": null,
-        "PerMode": "PerGame",
+        "PerMode": null,
         "LeagueID": "00",
         "Season": null,
         "SeasonType": null,
@@ -120,13 +133,52 @@
         "Country": null,
         "Height": null,
         "Weight": null,
-        "PlayerOrTeam": "Player"
+        "PlayerOrTeam": null
       },
-      "userParams": [
+      "requiredUserParams": [
         "PtMeasureType",
         "Season",
-        "SeasonType"
+        "SeasonType",
+        "PerMode",
+        "PlayerOrTeam"
       ]
+    }
+  },
+  "paramEnums": {
+    "SeasonType": {
+      "Regular Season": "Regular Season",
+      "Playoffs": "Playoffs"
+    },
+    "PtMeasureType": {
+      "Drives": "Drives",
+      "Defense": "Defense",
+      "CatchShoot": "CatchShoot",
+      "Passing": "Passing",
+      "Possessions": "Possessions",
+      "PullUpShot": "PullUpShot",
+      "Rebounding": "Rebounding",
+      "Efficiency": "Efficiency",
+      "SpeedDistance": "SpeedDistance",
+      "ElbowTouch": "ElbowTouch",
+      "PostTouch": "PostTouch",
+      "PaintTouch": "PaintTouch"
+    },
+    "PerMode": {
+      "PerGame": "PerGame",
+      "Totals": "Totals"
+    },
+    "MeasureType": {
+      "Base": "Base",
+      "Advanced": "Advanced",
+      "Misc": "Misc",
+      "Scoring": "Scoring",
+      "Usage": "Usage",
+      "Opponent": "Opponent",
+      "Defense": "Defense"
+    },
+    "PlayerOrTeam": {
+      "Player": "Player",
+      "Team": "Team"
     }
   }
 }
