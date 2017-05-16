@@ -25,6 +25,11 @@
       apiCfg.requests.playByPlay, params, headersToKeep);
   }
 
+  function getTracking(params, headersToKeep) {
+    return sendRequestGetResponse(
+      apiCfg.requests.tracking, params, headersToKeep);
+  }
+
   function sendRequestGetResponse(urlCfg, params, headersToKeep, tryNumber) {
     return new Promise(function(resolve, reject) {
       if (urlCfg.userParams) {

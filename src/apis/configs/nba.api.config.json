@@ -1,6 +1,6 @@
 {
   "general": {
-    "delay": 1000,
+    "delay": 3000,
     "timeout": 5000,
     "requestRetries": 5,
     "headers": {
@@ -86,6 +86,46 @@
       },
       "userParams": [
         "GameID"
+      ]
+    },
+    "tracking": {
+      "url": "http://stats.nba.com/stats/leaguedashptstats",
+      "defaultParams": {
+        "PtMeasureType": null,
+        "PerMode": "PerGame",
+        "LeagueID": "00",
+        "Season": null,
+        "SeasonType": null,
+        "PORound": 0,
+        "Outcome": null,
+        "Location": null,
+        "Month": 0,
+        "SeasonSegment": null,
+        "DateFrom": null,
+        "DateTo": null,
+        "OpponentTeamID": 0,
+        "VsConference": null,
+        "VsDivision": null,
+        "TeamID": 0,
+        "Conference": null,
+        "Division": null,
+        "LastNGames": 0,
+        "GameScope": null,
+        "PlayerExperience": null,
+        "PlayerPosition": null,
+        "StarterBench": null,
+        "DraftYear": null,
+        "DraftPick": null,
+        "College": null,
+        "Country": null,
+        "Height": null,
+        "Weight": null,
+        "PlayerOrTeam": "Player"
+      },
+      "userParams": [
+        "PtMeasureType",
+        "Season",
+        "SeasonType"
       ]
     }
   }
