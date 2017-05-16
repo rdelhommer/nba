@@ -33,14 +33,14 @@
   var data = {};
   var teamIds = [];
   var numRequestsSent = 0;
-  var numIdsFinished = 0;
   var gamesPerPart = 400;
-  var filePart = 1;
-  var test = null;
 
   setup().then(function () {
     async.eachSeries(seasons, function (s, nextSeason) {
       console.log('Season: ' + s);
+      data = {};
+      var filePart = 1;
+      var numIdsFinished = 0;
 
       async.eachSeries(seasonGameIds[s], function (id, nextId) {
         console.log('Game ID: ' + id + ' - ' + (numIdsFinished / seasonGameIds[s].length * 100).toFixed(2) + '%');
@@ -94,7 +94,6 @@
             }
 
             console.log(outputFile + ' was saved!');
-            data = {};
 
             return nextSeason(idErr);
           });
