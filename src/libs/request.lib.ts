@@ -1,14 +1,12 @@
-(function () {
-  var request = require('request');
+import * as request from 'request';
 
-  exports.sendRequest = sendRequest;
-
-  function sendRequest(url, headers, timeout) {
+export class RequestWrapper {
+  async sendRequest<TResponse>(url: string, headers: object, timeoutMs: number): Promise<TResponse> {
     return new Promise(function(resolve, reject) {
       request({
         url: url,
         headers: headers,
-        timeout: timeout
+        timeout: timeoutMs
       }, function (error, response, body) {
         if (error) return reject(error);
 
@@ -16,4 +14,4 @@
       });
     });
   }
-}());
+}
