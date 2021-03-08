@@ -1,9 +1,9 @@
 import { RequestWrapper } from '../../libs/request.lib';
 import { INbaApiResponse } from './interfaces';
-import { ITraditionalStats, mapRowSetToTraditionalStats } from './models/traditional.model';
+import { IPlayerBoxScoreTraditionalStats, IPlayerTraditionalStats, ITeamTraditionalStats, mapRowSetToPlayerBoxScoreTraditionalStats, mapRowSetToPlayerTraditionalStats, mapRowSetToTeamTraditionalStats } from './models/traditional.model';
 
 const NUM_RETRIES = 5;
-const REQUEST_DELAY_MS = 3000;
+const RETRY_DELAY_MS = 3000;
 
 export enum SeasonType {
   RegularSeason = 'Regular Season',
@@ -36,62 +36,68 @@ export class NbaApi {
     });
   }
 
-  private async sendRequestGetResponse(url, tryNumber?: number): Promise<INbaApiResponse> {
+  private async sendRequestGetResponse(url: string): Promise<INbaApiResponse> {
     return new Promise(async (resolve, reject) => {
-      let responseData = null;
       let currentTry = 0;
+      let cachedError;
 
       do {
         currentTry++;
-        console.log('Send request: Try ' + (currentTry + 1));
-        await this.wait(REQUEST_DELAY_MS);
 
         try {
           let response = await this.requestWrapper.sendRequest<INbaApiResponse>(
             url,
             {
               'Accept': 'application/json, text/plain, */*',
-              'Accept-Encoding': 'gzip, deflate, sdch',
-              'Accept-Language': 'en-US,en;q=0.8',
-              'Connection': 'keep-alive',
-              'DNT': 1,
-              'Host': 'stats.nba.com',
-              'Referer': 'http://stats.nba.com/scores/',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
+              'Accept-Language': 'en-US,en;q=0.5',
               'x-nba-stats-origin': 'stats',
-              'x-nba-stats-token': true
+              'x-nba-stats-token': 'true',
+              'Connection': 'keep-alive',
+              'Host': 'stats.nba.com',
+              'Referer': 'https://www.nba.com/stats/',
+              'Origin': 'https://www.nba.com',
             },
-            5000
+            10000
           );
 
-          if (response.resultSets[0].rowSet.length === 0) return null;
+          if (response.resultSets[0].rowSet.length === 0) return resolve(null);
         
-          return response;
+          return resolve(response);
         } catch (error) {
           // Log and Retry
           console.error(error);
+          await this.wait(RETRY_DELAY_MS);
         }
       } while(currentTry < NUM_RETRIES)
+
+      reject(cachedError);
     });
   }
 
-  async listTraditionalTeamStats(season: string, seasonType: SeasonType, perMode: PerMode): Promise<ITraditionalStats[]> {
-    let baseUrl = 'https://stats.nba.com/stats/leaguedashteamstats?Conference=&DateFrom=&DateTo=&Division=&GameScope=&GameSegment=&LastNGames=0&LeagueID=00&Location=&MeasureType=<MEASURE_TYPE>&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=<PER_MODE>&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=<SEASON>&SeasonSegment=&SeasonType=<SEASON_TYPE>&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=';
-    let url = baseUrl.replace('<SEASON>', season)
-      .replace('<SEASON_TYPE>', seasonType)
-      .replace('<PER_MODE>', perMode)
-      .replace('<MEASURE_TYPE>', MeasureType.Base)
+  async listTraditionalTeamStats(season: string, seasonType: SeasonType, perMode: PerMode): Promise<ITeamTraditionalStats[]> {
+    let url = `https://stats.nba.com/stats/leaguedashteamstats?Conference=&DateFrom=&DateTo=&Division=&GameScope=&GameSegment=&LastNGames=0&LeagueID=00&Location=&MeasureType=${MeasureType.Base}&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=${perMode}&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=${season}&SeasonSegment=&SeasonType=${seasonType}&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=`;
 
     let rawResponse = await this.sendRequestGetResponse(url);
     let resultSet = rawResponse.resultSets[0];
-    return resultSet.rowSet.map(x => mapRowSetToTraditionalStats(x, resultSet.headers));
+
+    return resultSet.rowSet.map(x => mapRowSetToTeamTraditionalStats(x, resultSet.headers));
   }
 
-  async listTraditionalPlayerStats() {
-    // TODO: 
+  async listTraditionalPlayerStats(season: string, seasonType: SeasonType, perMode: PerMode): Promise<IPlayerTraditionalStats[]> {
+    let url = `https://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=${MeasureType.Base}&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=${perMode}&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=${season}&SeasonSegment=&SeasonType=${seasonType}&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=&Weight=`;
+
+    let rawResponse = await this.sendRequestGetResponse(url);
+    let resultSet = rawResponse.resultSets[0];
+
+    return resultSet.rowSet.map(x => mapRowSetToPlayerTraditionalStats(x, resultSet.headers));
   }
 
-  async getGameLogs() {
-    // TODO: https://www.nba.com/stats/teams/boxscores-advanced/
+  async getPlayerGameLogs(playerId: number, season: string, seasonType: SeasonType, perMode: PerMode): Promise<IPlayerBoxScoreTraditionalStats[]> {
+    let url = `https://stats.nba.com/stats/playergamelogs?DateFrom=&DateTo=&GameSegment=&LastNGames=0&LeagueID=00&Location=&MeasureType=${MeasureType.Base}&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=${perMode}&Period=0&PlayerID=${playerId}&PlusMinus=N&Rank=N&Season=${season}&SeasonSegment=&SeasonType=${seasonType}&ShotClockRange=&VsConference=&VsDivision=`;
+
+    let rawResponse = await this.sendRequestGetResponse(url);
+    let resultSet = rawResponse.resultSets[0];
+
+    return resultSet.rowSet.map(x => mapRowSetToPlayerBoxScoreTraditionalStats(x, resultSet.headers));
   }
 }

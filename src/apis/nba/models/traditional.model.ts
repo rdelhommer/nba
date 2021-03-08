@@ -1,6 +1,4 @@
 export interface ITraditionalStats {
-  id: number;
-  name: string;
   gamesPlayed: number;
   wins: number;
   losses: number;
@@ -27,6 +25,30 @@ export interface ITraditionalStats {
   plusMinus: number;
 }
 
+export interface IPlayerTraditionalStats extends ITraditionalStats {
+  playerId: number;
+  playerName: string;
+  teamId: string;
+  teamAbbreviation: string;
+  age: string;
+}
+
+export interface ITeamTraditionalStats extends ITraditionalStats {
+  teamId: number;
+  teamName: string;
+}
+
+export interface IPlayerBoxScoreTraditionalStats extends Omit<IPlayerTraditionalStats, 'age'> {
+  gameId: number;
+  gameDate: Date;
+  matchup: string;
+  winLoss: 'W' | 'L';
+}
+
+type PlayerTraditionalStatsOnly = Omit<IPlayerTraditionalStats, keyof ITraditionalStats>;
+type TeamTraditionalStatsOnly = Omit<ITeamTraditionalStats, keyof ITraditionalStats>;
+type PlayerBoxScoreTraditionalStatsOnly = Omit<IPlayerBoxScoreTraditionalStats, keyof IPlayerTraditionalStats>;
+
 function mapRowSetValue(rowSet: any[], headers: string[], headerKey: string): any {
   let rowSetIndex = headers.indexOf(headerKey);
   return rowSetIndex === -1
@@ -34,10 +56,8 @@ function mapRowSetValue(rowSet: any[], headers: string[], headerKey: string): an
     : rowSet[rowSetIndex];
 }
 
-export function mapRowSetToTraditionalStats(rowSet: any[], headers: string[]) {
+function mapRowSetToTraditionalStats(rowSet: any[], headers: string[]): ITraditionalStats {
   return {
-    id: mapRowSetValue(rowSet, headers, 'TEAM_ID'),
-    name: mapRowSetValue(rowSet, headers, 'TEAM_NAME'),
     gamesPlayed: mapRowSetValue(rowSet, headers, 'GP'),
     wins: mapRowSetValue(rowSet, headers, 'W'),
     losses: mapRowSetValue(rowSet, headers, 'L'),
@@ -63,5 +83,30 @@ export function mapRowSetToTraditionalStats(rowSet: any[], headers: string[]) {
     personalFoulsDrawn: mapRowSetValue(rowSet, headers, 'PFD'),
     plusMinus: mapRowSetValue(rowSet, headers, 'PLUS_MINUS'),
   }
-  
+}
+
+export function mapRowSetToPlayerTraditionalStats(rowSet: any[], headers: string[]): IPlayerTraditionalStats {
+  return Object.assign<PlayerTraditionalStatsOnly, ITraditionalStats>({
+    playerId: mapRowSetValue(rowSet, headers, 'PLAYER_ID'),
+    playerName: mapRowSetValue(rowSet, headers, 'PLAYER_NAME'),
+    teamId: mapRowSetValue(rowSet, headers, 'TEAM_ID'),
+    teamAbbreviation: mapRowSetValue(rowSet, headers, 'TEAM_ABBREVIATION'),
+    age: mapRowSetValue(rowSet, headers, 'AGE'),
+  }, mapRowSetToTraditionalStats(rowSet, headers));
+}
+
+export function mapRowSetToTeamTraditionalStats(rowSet: any[], headers: string[]): ITeamTraditionalStats {
+  return Object.assign<TeamTraditionalStatsOnly, ITraditionalStats>({
+    teamId: mapRowSetValue(rowSet, headers, 'TEAM_ID'),
+    teamName: mapRowSetValue(rowSet, headers, 'TEAM_NAME'),
+  }, mapRowSetToTraditionalStats(rowSet, headers));
+}
+
+export function mapRowSetToPlayerBoxScoreTraditionalStats(rowSet: any[], headers: string[]): IPlayerBoxScoreTraditionalStats {
+  return Object.assign<PlayerBoxScoreTraditionalStatsOnly, IPlayerTraditionalStats>({
+    gameId: mapRowSetValue(rowSet, headers, 'GAME_ID'),
+    gameDate: mapRowSetValue(rowSet, headers, 'GAME_DATE'),
+    matchup: mapRowSetValue(rowSet, headers, 'MATCHUP'),
+    winLoss: mapRowSetValue(rowSet, headers, 'WL'),
+  }, mapRowSetToPlayerTraditionalStats(rowSet, headers));
 }
