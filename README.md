@@ -1,12 +1,13 @@
 # nba
 
-This is an api for accessing data on stats.nba.com and oddsshark.com.
+This is an api for accessing data on stats.nba.com
 
 ## Usage/Examples
-See the scripts directory for example usages
-
-## Notes
-nba.com implements some form of connection profiling to try and limit automated access to their apis.  Because of that this script attempts to behave in a way that is similar to a human user of the api, and as a result it is somewhat slow
+See the scripts directory for example usages across a variety of stat types
+To run the example, execute the following command
+```
+npm run example
+```
 
 ## NBA Terms of Use and Legal Stuff
 When using this api please keep in my nba.com's [Terms of Use](https://www.nba.com/news/termsofuse/).  The relevant information related to NBA Statistics is reproduced below, but you should read their terms in full as the information posted here may be out of date.
