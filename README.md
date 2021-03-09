@@ -3,7 +3,7 @@
 This is an api for accessing data on stats.nba.com and oddsshark.com.
 
 ## Usage/Examples
-See the scripts directory for example usages across a variety of stat types including advanced stats, player tracking, play by play, and more
+See the scripts directory for example usages
 
 ## Notes
 nba.com implements some form of connection profiling to try and limit automated access to their apis.  Because of that this script attempts to behave in a way that is similar to a human user of the api, and as a result it is somewhat slow
